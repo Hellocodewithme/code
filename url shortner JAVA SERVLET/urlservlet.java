@@ -1,0 +1,58 @@
+import java.io.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import java.sql.*;
+import java.util.Random;
+
+public class UrlServlet extends HttpServlet {
+    private Connection conn;
+
+    public void init() throws ServletException {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/url_shortener", "root", "Rahul@123"
+            );
+        } catch(Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        String originalUrl = req.getParameter("originalUrl");
+        String shortCode = generateShortCode();
+
+        try {
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO urls (original_url, short_code) VALUES (?,?)");
+            ps.setString(1, originalUrl);
+            ps.setString(2, shortCode);
+            ps.executeUpdate();
+        } catch(Exception e) { throw new ServletException(e); }
+
+        resp.setContentType("text/html");
+        PrintWriter out = resp.getWriter();
+        out.println("Shortened URL: <a href='redirect?c=" + shortCode + "'>localhost:8080/url%20shortner/redirect?c=" + shortCode + "</a>");
+    }
+
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        String code = req.getParameter("c");
+        if (code == null) {
+            resp.sendRedirect("../index.jsp");
+            return;
+        }
+        try {
+            PreparedStatement ps = conn.prepareStatement("SELECT original_url FROM urls WHERE short_code=?");
+            ps.setString(1, code);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                resp.sendRedirect(rs.getString("original_url"));
+            } else {
+                resp.getWriter().println("URL not found");
+            }
+        } catch(Exception e) { throw new ServletException(e); }
+    }
+
+    private String generateShortCode() {
+        return Integer.toHexString(new Random().nextInt(999999));
+    }
+}

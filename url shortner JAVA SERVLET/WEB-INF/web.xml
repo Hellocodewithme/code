@@ -1,0 +1,14 @@
+<web-app>
+  <servlet>
+    <servlet-name>urlServlet</servlet-name>
+    <servlet-class>UrlServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>urlServlet</servlet-name>
+    <url-pattern>/shorten</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>urlServlet</servlet-name>
+    <url-pattern>/redirect</url-pattern>
+  </servlet-mapping>
+</web-app>
